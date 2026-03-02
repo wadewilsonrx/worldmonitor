@@ -39,6 +39,7 @@ interface ParsedItem {
   category: string;
   confidence: number;
   classSource: 'keyword';
+  image: string;
 }
 
 async function fetchAndParseRss(
@@ -124,6 +125,10 @@ function parseRssXml(xml: string, feed: ServerFeed, variant: string): ParsedItem
       category: threat.category,
       confidence: threat.confidence,
       classSource: 'keyword',
+      image: (block.match(/<media:content[^>]+url=["']([^"']+)["']/i) ||
+        block.match(/<enclosure[^>]+url=["']([^"']+)["']/i) ||
+        block.match(/<img[^>]+src=["']([^"']+)["']/i) ||
+        block.match(/<thumb[^>]+url=["']([^"']+)["']/i))?.[1] ?? '',
     });
   }
 
@@ -176,7 +181,8 @@ function toProtoItem(item: ParsedItem): ProtoNewsItem {
       source: item.classSource,
     },
     locationName: '',
-  };
+    image: item.image,
+  } as any;
 }
 
 export async function listFeedDigest(
